@@ -11,6 +11,7 @@ Nothing is ever invented as a fallback.
 from __future__ import annotations
 
 import logging
+import time
 from datetime import date
 from typing import Any
 
@@ -19,6 +20,7 @@ import requests
 from app.config import Config
 from app.services import teams as T
 from app.services.cache import Fetched, TTLCache
+from app.services.util import today_et
 
 logger = logging.getLogger("courtvision.data")
 
@@ -76,6 +78,7 @@ class NBAData:
         self.cache = cache or TTLCache(Config.CACHE_DIR if Config.DISK_CACHE else None)
         self.http = requests.Session()
         self._cdn_profile = 0          # index of the CDN header profile that last worked
+        self._cdn_down_until = 0.0     # when cdn.nba.com is blocked for this network, go straight to the stats.nba.com fallback
         if Config.NBA_PROXY:
             self.http.proxies.update({"http": Config.NBA_PROXY, "https": Config.NBA_PROXY})
 
@@ -111,6 +114,22 @@ class NBAData:
         obj = cls(timeout=self.timeout, **kwargs, **params)   # default nba_api headers (known to work with stats.nba.com)
         normalized = obj.get_normalized_dict()
         return _Sets({name: _lower_keys(rows) for name, rows in normalized.items()})
+
+    def _stats_dict(self, endpoint: str, **params: Any) -> dict:
+        """Raw JSON of an nba_api stats endpoint (used for the V2/V3 endpoints whose payload mirrors the CDN files)."""
+        from nba_api.stats import endpoints
+        kwargs = {"proxy": Config.NBA_PROXY} if Config.NBA_PROXY else {}
+        return getattr(endpoints, endpoint)(timeout=self.timeout, **kwargs, **params).get_dict()
+
+    def _cdn_or_stats(self, cdn_fn, stats_fn):
+        """Prefer cdn.nba.com; if it is blocked/unreachable, fall back to the equivalent stats.nba.com endpoint."""
+        if time.time() >= self._cdn_down_until:
+            try:
+                return cdn_fn()
+            except Exception as exc:
+                self._cdn_down_until = time.time() + 300
+                logger.warning("cdn.nba.com unavailable (%s) - using stats.nba.com fallback for 5 min", str(exc)[:120])
+        return stats_fn()
 
     @staticmethod
     def is_current(season: str) -> bool:
@@ -205,7 +224,8 @@ class NBAData:
     def schedule(self) -> Fetched:
         """Full current-season schedule incl. results (cdn schedule file only covers the current season)."""
         def go() -> list[dict]:
-            raw = self._json(URL_SCHEDULE, cdn=True)
+            raw = self._cdn_or_stats(lambda: self._json(URL_SCHEDULE, cdn=True),
+                                     lambda: self._stats_dict("ScheduleLeagueV2", season=T.current_season()))
             out = []
             for day in (raw.get("leagueSchedule") or {}).get("gameDates", []):
                 for g in day.get("games", []):
@@ -213,11 +233,13 @@ class NBAData:
                     if n["stage"] != "preseason" and n["home"]["abbr"] and n["away"]["abbr"]:
                         out.append(n)
             return out
-        return self.cache.get("schedule", 10 * 60, go, "NBA CDN · scheduleLeagueV2")
+        return self.cache.get("schedule", 10 * 60, go, "NBA schedule (cdn.nba.com, falls back to stats.nba.com)")
 
     def scoreboard_today(self) -> Fetched:
         def go() -> dict:
-            sb = (self._json(URL_SCOREBOARD, cdn=True) or {}).get("scoreboard") or {}
+            raw = self._cdn_or_stats(lambda: self._json(URL_SCOREBOARD, cdn=True),
+                                     lambda: self._stats_dict("ScoreboardV3", game_date=today_et().isoformat()))
+            sb = (raw or {}).get("scoreboard") or {}
             games = []
             for g in sb.get("games", []):
                 n = self._norm_game(g)
@@ -233,17 +255,38 @@ class NBAData:
                 }
                 games.append(n)
             return {"date": sb.get("gameDate"), "games": games}
-        return self.cache.get("scoreboard", 5, go, "NBA CDN · todaysScoreboard", persist=False)
+        return self.cache.get("scoreboard", 5, go, "NBA scoreboard (cdn.nba.com, falls back to stats.nba.com)", persist=False)
 
     def boxscore(self, game_id: str, final: bool = False) -> Fetched:
-        return self.cache.get(f"box:{game_id}", DAY if final else 8,
-                              lambda: (self._json(URL_BOXSCORE.format(gid=game_id), cdn=True) or {}).get("game") or {},
-                              "NBA CDN · boxscore", persist=final)
+        def go() -> dict:
+            return self._cdn_or_stats(
+                lambda: (self._json(URL_BOXSCORE.format(gid=game_id), cdn=True) or {}).get("game") or {},
+                lambda: self.box_from_v3(self._stats_dict("BoxScoreTraditionalV3", game_id=game_id)))
+        return self.cache.get(f"box:{game_id}", DAY if final else 8, go, "NBA box score (cdn.nba.com, falls back to stats.nba.com)", persist=final)
 
     def playbyplay(self, game_id: str, final: bool = False) -> Fetched:
         def go() -> list[dict]:
-            return ((self._json(URL_PBP.format(gid=game_id), cdn=True) or {}).get("game") or {}).get("actions", [])
-        return self.cache.get(f"pbp:{game_id}", DAY if final else 8, go, "NBA CDN · playbyplay", persist=final)
+            return self._cdn_or_stats(
+                lambda: ((self._json(URL_PBP.format(gid=game_id), cdn=True) or {}).get("game") or {}).get("actions", []),
+                lambda: ((self._stats_dict("PlayByPlayV3", game_id=game_id) or {}).get("game") or {}).get("actions", []))
+        return self.cache.get(f"pbp:{game_id}", DAY if final else 8, go, "NBA play-by-play (cdn.nba.com, falls back to stats.nba.com)", persist=final)
+
+    @staticmethod
+    def box_from_v3(raw: dict) -> dict:
+        """Reshape stats.nba.com BoxScoreTraditionalV3 into the cdn.nba.com boxscore `game` layout used by the parser."""
+        g = (raw or {}).get("boxScoreTraditional") or {}
+        out: dict[str, Any] = {"gameId": g.get("gameId")}
+        for side in ("homeTeam", "awayTeam"):
+            t = g.get(side) or {}
+            totals = t.get("totals") or {}
+            players = []
+            for p in t.get("players", []):
+                st = dict(p.get("statistics") or {})
+                players.append({**p, "name": p.get("name") or p.get("nameI") or f"{p.get('firstName', '')} {p.get('familyName', '')}".strip(),
+                                "starter": "1" if (p.get("position") or "").strip() else "0", "statistics": st})
+            out[side] = {"teamId": t.get("teamId"), "teamTricode": t.get("teamTricode"), "score": totals.get("points", 0),
+                         "players": players, "statistics": totals, "periods": []}
+        return out
 
     # ------------------------------------------------------------------ ESPN (context only)
     def news(self, limit: int = 20) -> Fetched:

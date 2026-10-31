@@ -46,7 +46,7 @@ export default async function render(ctx) {
   const todayEl = root.querySelector("#today");
   let games = today;
   const drawToday = () => {
-    if (d.today === null) { todayEl.innerHTML = stateError({ message: "Scoreboard unavailable right now." }).toString(); return; }
+    if (d.today === null) { todayEl.innerHTML = stateError({ message: "Today's scoreboard couldn't be loaded from NBA sources. It retries automatically; see the terminal log for the reason." }).toString(); return; }
     if (!games.length) {
       const nxt = d.schedule?.upcoming?.slice(0, 3) || [];
       todayEl.innerHTML = stateEmpty("No games today", nxt.length ? `Next up: ${nxt[0].away.abbr} @ ${nxt[0].home.abbr} on ${fmt.date(nxt[0].date)}.` : "Check the schedule for upcoming games.", "calendar").toString() + (nxt.length ? `<div class="games">${nxt.map((g) => gameCard(g)).join("")}</div>` : "");

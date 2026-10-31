@@ -27,6 +27,11 @@ def _int(v: Any, d: int = 0) -> int:
     return d if f is None else int(f)
 
 
+def _opt(d: dict, key: str) -> int | None:
+    """None (not 0) when the source layout doesn't provide the stat."""
+    return _int(d[key]) if d.get(key) is not None else None
+
+
 def live_wp_from_state(model: WinProbabilityModel, home_score: int, away_score: int, period: int, clock: str | None) -> float:
     """Cheap state-only live win probability (score, clock) - used for scoreboard cards."""
     return model.predict_home_win_probability({
@@ -68,9 +73,9 @@ def parse_boxscore(game: dict) -> dict[str, Any]:
             "stats": {"fg_pct": pct(fgm, fga), "fg3_pct": pct(tm, ta), "ft_pct": pct(fm, fa),
                       "reb": _int(ts.get("reboundsTotal")), "ast": _int(ts.get("assists")), "tov": _int(ts.get("turnovers")),
                       "stl": _int(ts.get("steals")), "blk": _int(ts.get("blocks")),
-                      "paint": _int(ts.get("pointsInThePaint")), "fast_break": _int(ts.get("pointsFastBreak")),
-                      "second_chance": _int(ts.get("pointsSecondChance")), "bench": _int(ts.get("benchPoints")),
-                      "biggest_lead": _int(ts.get("biggestLead"))},
+                      "paint": _opt(ts, "pointsInThePaint"), "fast_break": _opt(ts, "pointsFastBreak"),
+                      "second_chance": _opt(ts, "pointsSecondChance"), "bench": _opt(ts, "benchPoints"),
+                      "biggest_lead": _opt(ts, "biggestLead")},
         }
     return out
 
