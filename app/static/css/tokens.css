@@ -1,0 +1,33 @@
+@font-face { font-family: "Inter"; src: url("../fonts/inter-latin.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+:root {
+  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --r-sm: 6px; --r: 10px; --r-lg: 14px;
+  --sidebar-w: 236px; --topbar-h: 58px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  color-scheme: dark;
+}
+:root[data-theme="dark"] {
+  --bg: #07080a; --surface: #0e1013; --surface-2: #14171b; --surface-3: #1b1f24; --hover: #181c21;
+  --border: #22272d; --border-strong: #303740;
+  --text: #eceff2; --text-2: #a4acb6; --text-3: #6d7682;
+  --accent: #ff7a1a; --accent-soft: rgba(255,122,26,.13); --accent-contrast: #0b0b0c; --accent-2: #ffb066;
+  --pos: #2fd39a; --pos-soft: rgba(47,211,154,.13); --neg: #ff5d6c; --neg-soft: rgba(255,93,108,.13);
+  --warn: #f5b73b; --warn-soft: rgba(245,183,59,.13); --info: #5b9dff; --info-soft: rgba(91,157,255,.14);
+  --home: #5b9dff; --away: #ff7a1a;
+  --grid: rgba(255,255,255,.06); --chart-text: #8c949f; --shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 12px 32px -18px rgba(0,0,0,.8);
+  --court: #12161a; --court-line: #3a424c; --skeleton-a: #14171b; --skeleton-b: #1d2227;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f5f7; --surface: #ffffff; --surface-2: #f0f2f5; --surface-3: #e7eaee; --hover: #f2f4f7;
+  --border: #e1e5ea; --border-strong: #cdd3db;
+  --text: #101317; --text-2: #46505b; --text-3: #7a848f;
+  --accent: #e5600a; --accent-soft: rgba(229,96,10,.10); --accent-contrast: #ffffff; --accent-2: #f08a3c;
+  --pos: #0d9a72; --pos-soft: rgba(13,154,114,.11); --neg: #d3263c; --neg-soft: rgba(211,38,60,.09);
+  --warn: #b97a06; --warn-soft: rgba(185,122,6,.11); --info: #2563d6; --info-soft: rgba(37,99,214,.09);
+  --home: #2563d6; --away: #e5600a;
+  --grid: rgba(16,19,23,.07); --chart-text: #66707b; --shadow: 0 1px 2px rgba(16,19,23,.05), 0 10px 28px -20px rgba(16,19,23,.25);
+  --court: #f3f5f8; --court-line: #aab3bf; --skeleton-a: #eceff3; --skeleton-b: #f7f8fa;
+}

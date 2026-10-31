@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ app_name }} — {{ tagline }}</title>
+  <meta name="description" content="{{ app_name }}: live NBA scores, win-probability models, player and team intelligence, shot analysis and explainable predictions.">
+  <meta name="application-name" content="{{ app_name }}">
+  <meta name="theme-color" content="#07080a" id="meta-theme">
+  <meta property="og:title" content="{{ app_name }} — {{ tagline }}">
+  <meta property="og:description" content="Explainable NBA predictions, live game impact analysis and player intelligence.">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/inter-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('static', filename='js/theme-init.js') }}"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="Primary">
+      <a class="brand" href="#/overview" aria-label="{{ app_name }} home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M5.5 16C9 9.8 23 9.8 26.5 16 23 22.2 9 22.2 5.5 16Z" fill="none" stroke="#0b0b0c" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="16" r="4.3" fill="#0b0b0c"/><path d="M16 11.7v8.6M11.7 16h8.6" stroke="var(--accent)" stroke-width="1.2"/></svg>
+        <span class="brand-text"><b>CourtVision</b><i>AI</i></span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Sections"></nav>
+      <div class="sidebar-foot">
+        <div class="ai-pill" id="ai-pill" title="AI analyst mode"></div>
+        <div class="muted tiny">v{{ version }} · Season <span id="season-foot">{{ season }}</span></div>
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <header class="topbar" id="topbar">
+        <button class="icon-btn only-compact" id="menu-btn" aria-label="Open menu"></button>
+        <button class="search-trigger" id="search-btn" aria-label="Search players and teams">
+          <span class="ico" data-icon="search"></span><span class="search-label">Search players, teams…</span><kbd>Ctrl K</kbd>
+        </button>
+        <div class="topbar-spacer"></div>
+        <div class="live-pill" id="live-pill" hidden><span class="dot"></span><span id="live-count">0</span> live</div>
+        <label class="season-select"><span class="sr">Season</span>
+          <select id="season-select" aria-label="Season"></select></label>
+        <div class="data-pill" id="data-pill" title="Data freshness"><span class="dot"></span><span id="data-pill-text">Connecting</span></div>
+        <button class="icon-btn" id="theme-btn" aria-label="Toggle theme" title="Toggle theme"></button>
+      </header>
+      <div class="ticker" id="ticker" aria-label="Live scores" hidden><div class="ticker-track" id="ticker-track"></div></div>
+      <main id="main" class="page-host" tabindex="-1"></main>
+    </div>
+  </div>
+  <div class="overlay" id="overlay" hidden></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <noscript><p style="padding:2rem">{{ app_name }} needs JavaScript to run.</p></noscript>
+</body>
+</html>

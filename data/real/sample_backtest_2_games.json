@@ -1,0 +1,55 @@
+{
+  "source": "brendanwilliam/nba-playbyplay-2223season (Hugging Face Hub)",
+  "sample_size_caveat": "2 real games, 329 real shots, hand-extracted; small-N directional signal, not a statistically powered backtest - extend by adding more games to the two CSVs in data/",
+  "games": 2,
+  "shots_backtested": 329,
+  "shot_quality": {
+    "overall_real_fg_pct": 0.5228,
+    "buckets": [
+      {
+        "label": "0-3 ft",
+        "n": 79,
+        "real_fg_pct": 0.6709,
+        "predicted_quality": 0.7325
+      },
+      {
+        "label": "4-9 ft",
+        "n": 88,
+        "real_fg_pct": 0.5455,
+        "predicted_quality": 0.7003
+      },
+      {
+        "label": "10-15 ft",
+        "n": 37,
+        "real_fg_pct": 0.4324,
+        "predicted_quality": 0.5984
+      },
+      {
+        "label": "16-21 ft",
+        "n": 23,
+        "real_fg_pct": 0.6087,
+        "predicted_quality": 0.5227
+      },
+      {
+        "label": "22-23 ft",
+        "n": 4,
+        "real_fg_pct": 0.75,
+        "predicted_quality": 0.4925
+      },
+      {
+        "label": "24+ ft",
+        "n": 98,
+        "real_fg_pct": 0.3878,
+        "predicted_quality": 0.4215
+      }
+    ],
+    "correlation_real_fg_vs_predicted_quality": 0.2453
+  },
+  "win_probability": {
+    "checkpoints": 16,
+    "log_loss": 0.7263,
+    "brier_score": 0.2694,
+    "final_checkpoint_accuracy": "1/2",
+    "note": "home_possession and foul counts are held at neutral placeholder values (not reconstructed from the source data in this sample) - this backtest isolates the model's response to real score_diff, time_remaining, and shot_quality."
+  }
+}
