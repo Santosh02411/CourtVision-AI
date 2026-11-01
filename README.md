@@ -96,6 +96,11 @@ scripts/                             # train_models, train_pregame, evaluate_rea
 tests/                               # pytest suite + TEST-ONLY fixtures (never imported by the app)
 ```
 
+## Demo & screenshots
+
+* `demo/CourtVision-AI-Demo.html` - one self-contained file (open it in a browser, click **Try demo**). Same UI and the same model/analytics code, running on generated demo data (fictional players) with a simulated live game; every screen carries a DEMO banner. Rebuild with `python demo/build_demo.py` (needs Node.js).
+* `python scripts/capture_screenshots.py` - with the app running, saves numbered screenshots of every page of **your** instance (`pip install playwright && playwright install chromium`; options `--theme both`, `--url`, `--out`).
+
 ## Tests
 
 ```bash

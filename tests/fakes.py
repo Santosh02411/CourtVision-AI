@@ -36,7 +36,7 @@ class FakeNBAData(NBAData):
     def _games(self, season: str) -> list[dict]:
         if season in self._logs:
             return self._logs[season]
-        rng = np.random.default_rng(abs(hash(season)) % 10_000)
+        rng = np.random.default_rng(int(season[:4]))      # stable across processes
         cur = season == T.current_season()
         n = self.season_games * 15 if cur else self.past_games
         start = date(int(season[:4]), 10, 22)
