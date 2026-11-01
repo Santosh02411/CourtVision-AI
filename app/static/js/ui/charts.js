@@ -15,7 +15,7 @@ export function baseOptions(c, extra = {}) {
     scales: {}, ...extra,
   };
 }
-export const axis = (c, o = {}) => ({ grid: { color: c.grid, drawTicks: false }, border: { display: false }, ticks: { color: c.text, font: { family: "Inter", size: 11 }, padding: 6, ...(o.ticks || {}) }, ...o, ticks: { color: c.text, font: { family: "Inter", size: 11 }, padding: 6, ...(o.ticks || {}) } });
+export const axis = (c, o = {}) => ({ grid: { color: c.grid, drawTicks: false }, border: { display: false }, ...o, ticks: { color: c.text, font: { family: "Inter", size: 11 }, padding: 6, ...(o.ticks || {}) } });
 
 /** builder(colors) -> Chart.js config. Charts rebuild automatically on theme change. */
 export function makeChart(canvas, builder, owner) {

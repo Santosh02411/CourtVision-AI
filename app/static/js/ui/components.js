@@ -18,7 +18,7 @@ export function provenance(meta, extra = "") {
 export const notices = (meta) => raw((meta?.notes || []).map((n) => notice(n, "warn").toString()).join(""));
 export function notice(text, kind = "warn") { return html`<div class="notice ${kind === "warn" ? "" : kind}">${raw(icon(kind === "err" ? "alert" : "info"))}<div>${text}</div></div>`; }
 
-export const teamLogo = (t, cls = "") => t ? html`<img class="logo ${cls}" src="${t.logo}" alt="" loading="lazy">` : html`<span class="logo ${cls}"></span>`;
+export const teamLogo = (t, cls = "") => t ? html`<img class="logo ${cls}" src="${t.logo}" alt="" loading="lazy" data-abbr="${t.abbr || ""}" data-c="${t.primary || ""}">` : html`<span class="logo ${cls}"></span>`;
 export const face = (id, cls = "") => html`<img class="face ${cls}" src="https://cdn.nba.com/headshots/nba/latest/1040x760/${id}.png" alt="" loading="lazy">`;
 
 export const skel = (h = 16, w = "100%", mb = 8) => html`<div class="skel" style="height:${h}px;width:${w};margin-bottom:${mb}px"></div>`;

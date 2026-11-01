@@ -101,7 +101,7 @@ function startLive() {
   const apply = (games, status = "fresh") => { store.set("live", { games, status, at: Date.now() }); renderTicker(games); };
   const poll = async () => { try { const { data } = await api("/scoreboard", {}, { ttl: 4000, force: true }); apply(data.games); } catch { /* shown by data pill */ } };
   poll();
-  let timer = setInterval(poll, 20000);
+  let timer = setInterval(poll, window.__CV_POLL_MS || 20000);
   if (window.io) {
     const s = window.io({ transports: ["websocket", "polling"], reconnectionDelay: 2000 });
     s.on("scoreboard", (p) => { if (p.games?.length || p.status !== "unavailable") apply(p.games || [], p.status); });
@@ -111,10 +111,18 @@ function startLive() {
 }
 
 const FACE_FALLBACK = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#808890" fill-opacity=".25"/><circle cx="20" cy="16" r="6" fill="#808890"/><path d="M8 40c1-9 7-12 12-12s11 3 12 12z" fill="#808890"/></svg>');
+// Coloured abbreviation badge shown when a team logo can't be loaded (offline, or cdn.nba.com blocked).
+function logoFallback(abbr = "", color = "") {
+  const c = /^#[0-9a-f]{6}$/i.test(color) ? color : "#6b7480", n = parseInt(c.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255, fg = lum > 0.62 ? "#111" : "#fff";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="${c}"/><text x="20" y="25" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="${abbr.length > 2 ? 13 : 15}" font-weight="700" fill="${fg}">${abbr.replace(/[<>&"]/g, "")}</text></svg>`;
+  return "data:image/svg+xml," + encodeURIComponent(svg);
+}
 // CSP forbids inline onerror handlers, so image fallbacks are handled here (error events don't bubble -> capture).
 document.addEventListener("error", (e) => {
   const t = e.target; if (!(t instanceof HTMLImageElement)) return;
-  if (t.classList.contains("face") && t.src !== FACE_FALLBACK) t.src = FACE_FALLBACK; else if (t.classList.contains("logo")) t.style.visibility = "hidden";
+  if (t.classList.contains("face") && t.src !== FACE_FALLBACK) t.src = FACE_FALLBACK;
+  else if (t.classList.contains("logo") && !t.dataset.fb) { t.dataset.fb = "1"; t.src = logoFallback(t.dataset.abbr, t.dataset.c); }
 }, true);
 
 async function boot() {
@@ -132,4 +140,5 @@ async function boot() {
   window.addEventListener("online", () => toast("Back online", "ok"));
   window.addEventListener("offline", () => toast("You are offline — showing the last loaded data", "err"));
 }
-boot();
+// The standalone demo build starts the app itself once the visitor clicks "Try demo".
+if (window.__CV_MANUAL_BOOT) window.__cvStart = boot; else boot();
