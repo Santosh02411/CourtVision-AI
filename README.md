@@ -4,6 +4,7 @@ A sports-analytics platform built on Flask + Socket.IO with a framework-free, du
 an in-game win-probability model, an explainable pre-game predictor, player/team intelligence, shot analysis and an AI analyst.
 (Formerly *NBA-AI / NBA Live Predictor*.)
 
+Demo Video - https://vimeo.com/1241938744?share=copy&fl=sv&fe=ci
 ## Data honesty
 
 Every API response carries a `meta` block, and the UI shows it:
